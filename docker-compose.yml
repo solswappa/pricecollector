@@ -1,0 +1,56 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      max_connections: "100"
+      TIMESCALEDB_TELEMETRY: "off"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./aggregates.sql:/docker-entrypoint-initdb.d/2-aggregates.sql
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        reservations:
+          memory: 512M
+        limits:
+          memory: 1G
+
+  collector:
+    build: .
+    env_file: .env
+    depends_on:
+      - timescaledb
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          memory: 256M
+    command: ["python", "hello.py"]
+    environment:
+      PGMAXCONNECTIONS: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      - timescaledb
+    restart: always
+    deploy:
+      resources:
+        reservations:
+          memory: 256M
+    entrypoint: ["/bin/sh", "-c", "sleep 10 && uvicorn api:app --host 0.0.0.0 --port 8000"]
+    environment:
+      PGMAXCONNECTIONS: 20
+
+volumes:
+  timescale_data: 

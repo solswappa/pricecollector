@@ -1,0 +1,15 @@
+[Unit]
+Description=Crypto Price Collector
+After=network.target
+
+[Service]
+User=crypto
+WorkingDirectory=/opt/crypto-collector
+Environment=PYTHONPATH=/opt/crypto-collector
+EnvironmentFile=/opt/crypto-collector/.env
+ExecStart=/opt/crypto-collector/venv/bin/python hello.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

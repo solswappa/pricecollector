@@ -1,0 +1,8 @@
+fastapi
+asyncpg
+websockets
+aiohttp
+pydantic
+pydantic-settings
+python-dotenv
+psutil
